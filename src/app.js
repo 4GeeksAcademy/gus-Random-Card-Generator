@@ -1,33 +1,142 @@
 /* eslint-disable */
 import "bootstrap";
 import "./style.css";
-let cartas = ["♥", "♦", "♣", "♠"];
-let number = ["A", 2, 3, 5, 6, 7, 8, 9, 10, "J", "Q", "K"];
-let numberCard = document.querySelector(".number");
-let button = document.querySelector("button");
-let dostipos = document.querySelectorAll(".typeCard");
-//Using foreach
-function randomGenerator(arr) {
-  let random = Math.floor(arr.length * Math.random());
-  return arr[random];
+
+import "./assets/img/rigo-baby.jpg";
+import "./assets/img/4geeks.ico";
+
+window.onload = () => {
+  document
+    .getElementById("generate-btn")
+    .addEventListener("click", generateRandomCards);
+
+  document
+    .getElementById("sort-btn")
+    .addEventListener("click", sortAndShowChanges);
+};
+
+let generateRandomNumber = () => {
+  let numbers = [
+    "A",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "J",
+    "Q",
+    "K"
+  ];
+  let indexNumbers = Math.floor(Math.random() * numbers.length);
+  return numbers[indexNumbers];
+};
+
+let generateRandomSuit = () => {
+  let suit = ["diamond", "spade", "heart", "club"];
+  let indexSuit = Math.floor(Math.random() * suit.length);
+  return suit[indexSuit];
+};
+
+function convertCardValue(value) {
+  switch (value) {
+    case "1":
+      return "A";
+    case "11":
+      return "J";
+    case "12":
+      return "Q";
+    case "13":
+      return "K";
+    default:
+      return value;
+  }
 }
-function randomCard() {
-  let randomCard = randomGenerator(cartas);
-  for (let i = 0; i < dostipos.length; i++) {
-    if (randomCard == "♦" || randomCard == "♥") {
-      dostipos[i].classList.add("red");
-      dostipos[i].classList.remove("black");
-    } else {
-      dostipos[i].classList.remove("red");
-      dostipos[i].classList.add("black");
+
+function generateRandomCards() {
+  const numCards = parseInt(document.getElementById("num-cards").value, 10);
+  const cardContainer = document.getElementById("card-container");
+  cardContainer.innerHTML = "";
+
+  for (let i = 0; i < numCards; i++) {
+    const card = document.createElement("div");
+    card.classList.add("card");
+    const suit = generateRandomSuit();
+    card.classList.add(suit);
+    const randomNumber = generateRandomNumber();
+    card.innerHTML = convertCardValue(randomNumber);
+    cardContainer.appendChild(card);
+  }
+
+  document.getElementById("cambios-dificiles-container").innerHTML = "";
+}
+
+function sortAndShowChanges() {
+  const cardsContainer = document.getElementById("card-container");
+  const originalCards = Array.from(cardsContainer.querySelectorAll(".card"));
+  const cambiosDificilesContainer = document.getElementById(
+    "cambios-dificiles-container"
+  );
+
+  cambiosDificilesContainer.innerHTML = "";
+
+  const cards = originalCards.map(card => ({
+    value: card.innerHTML,
+    suit: card.className.split(" ")[1]
+  }));
+
+  function bubbleSortWithChanges(cards) {
+    const n = cards.length;
+    let step = 0;
+
+    for (let i = 0; i < n - 1; i++) {
+      for (let j = 0; j < n - i - 1; j++) {
+        if (compareCards(cards[j], cards[j + 1]) > 0) {
+          [cards[j], cards[j + 1]] = [cards[j + 1], cards[j]];
+          step++;
+          displayStep(cards, step);
+        }
+      }
     }
   }
-  dostipos.forEach(item => {
-    item.textContent = randomCard;
-  });
-  numberCard.textContent = randomGenerator(number);
+
+  function compareCards(card1, card2) {
+    const getCardValue = card => {
+      if (card.value === "A") return 15; // A es la carta más alta
+      if (card.value === "K") return 13;
+      if (card.value === "Q") return 12;
+      if (card.value === "J") return 11;
+      return parseInt(card.value);
+    };
+
+    return getCardValue(card1) - getCardValue(card2);
+  }
+
+  function displayStep(cards, step) {
+    const stepContainer = document.createElement("div");
+    stepContainer.className = "step-container";
+
+    const stepNumber = document.createElement("div");
+    stepNumber.className = "step-number";
+    stepNumber.textContent = step;
+    stepContainer.appendChild(stepNumber);
+
+    const cardsRow = document.createElement("div");
+    cardsRow.className = "cards-row";
+
+    cards.forEach(card => {
+      const cardElement = document.createElement("div");
+      cardElement.className = `card ${card.suit}`;
+      cardElement.innerHTML = card.value;
+      cardsRow.appendChild(cardElement);
+    });
+
+    stepContainer.appendChild(cardsRow);
+    cambiosDificilesContainer.appendChild(stepContainer);
+  }
+
+  bubbleSortWithChanges(cards);
 }
-randomCard();
-button.addEventListener("click", () => {
-  randomCard();
-});
